@@ -1,0 +1,19 @@
+$def with (form)
+
+<!DOCTYPE html>
+
+<html>
+    <head>
+	<link rel="stylesheet" type="text/css" href="static/css/general.css">
+    </head>
+
+    <body>
+	<form name="main" method="post">
+	    $if not form.valid:<p class="error">Try again</p>
+	    $:form.render()
+	</form>
+    </body>
+</html> 
+
+
+

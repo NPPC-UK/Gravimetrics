@@ -1,0 +1,67 @@
+$def with (form, getTable)
+$ table = getTable()
+<!DOCTYPE html>
+<html>
+    <head>
+      <link rel="stylesheet" type="text/css" href="static/css/general.css">
+    </head>
+    
+    <body onload="openTab(event, 'bench0')">
+	<h1>
+	    Plants Updater
+	</h1>
+
+	
+	<div id="tabs">
+	    <ul class="tab">
+
+		 $for bench in range(len(table['benches'])):
+		 <li><a href="javascript:void(0)" class="tablinks" onclick="openTab(event, 'bench$bench')">Bench $bench</a></li>
+		
+		<form style="float: right;"action="/logout" method="get">	    
+		    <input type="submit" value="Logout" name="Logout" id="frmLogout" />
+		</form>
+	    </ul>
+
+	</div>
+	
+	<form name="update" method="post">
+	    $if not form.valid: <p class="error">Double check your given input!:</p>
+	    $for idx, bench in enumerate(table['benches']):
+	    
+	    <div id="bench$idx" class="tabcontent">
+		<table>
+		    <tr>		    
+			$for header in table['headers']:
+			<th>$header</th>  
+		    </tr>
+		    $for plant in table['benches'][idx]:
+		    <tr>
+			<td><a href="/data?plantId=$plant['name']">$plant['name']</a></td>
+			<td>$plant['balance'] </td>
+			<td>$:plant['weight']()</td>
+		    </tr>
+		</table>
+	    </div>
+	    
+	   $:form.Update.render()
+	</form>
+
+	<script>
+	 function openTab(evt, benchName) {
+	     var i, tabcontent, tablinks;
+	     tabcontent = document.getElementsByClassName("tabcontent");
+	     for (i = 0; i < tabcontent.length; i++) {
+		 tabcontent[i].style.display = "none";
+	     }
+	     tablinks = document.getElementsByClassName("tablinks");
+	     for (i = 0; i < tablinks.length; i++) {
+		 tablinks[i].className = tablinks[i].className.replace(" active", "");
+	     }
+	     document.getElementById(benchName).style.display = "block";
+	     evt.currentTarget.className += " active";
+	 }
+	</script>
+
+    </body>
+</html>
