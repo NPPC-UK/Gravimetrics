@@ -58,7 +58,6 @@ def getTable():
     for idx in range(0, len(plants), 16):
         benches.append(plants[idx: idx + 16])
 
-    #myDict['plants'] = plants
     myDict['benches'] = benches
     return myDict
 

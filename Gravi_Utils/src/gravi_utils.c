@@ -1,4 +1,4 @@
-#/**
+/**
  * @file main.c
  * @author Nathan Hughes
  * @date 25/8/2016
@@ -48,6 +48,16 @@ int main(int argc, char *argv[]) {
       exit(EXIT_SUCCESS);
     }
 
+    else if (!strcmp(argv[1], "master")){
+	activate_master_solenoid(argv[2], argv[3][0]);
+	exit(EXIT_SUCCESS);
+      }
+    else if (!strcmp(argv[1], "lifter")){
+      lift(argv[2], argv[3][0]);
+    }
+    else if (!strcmp(argv[1], "tare")){
+      tare_balance(argv[2]);
+    }
     else if (!strcmp(argv[1], "test_gpio")){
       if(interact_with_port(argv[2], 'W', argv[3][0])){
 	printf("Sucessfully applied action %c on: %s",  argv[3][0], argv[2]);
@@ -60,7 +70,7 @@ int main(int argc, char *argv[]) {
     }
     
     else {
-      fprintf(stderr, "Need additional information, please give port file and/or watering target\n");
+      fprintf(stderr, "Need additional information, contact system administrator\n");
       exit(EXIT_FAILURE);
     }
   }
@@ -87,7 +97,6 @@ int main(int argc, char *argv[]) {
  * Function implementations 
  *
  */
-
 int get_balance(char* balance_port_id){
   return interact_with_port(balance_port_id, 'B', 0);
 }
@@ -98,27 +107,44 @@ int water_to_weight(char* balance_PortID, char* water_port_id, int target_weight
   
   if(current < target_weight){
 
-    clock_t start = clock(); // start the clock
-    int elapsed_time = 0; 
-    interact_with_port(water_port_id, 'W', '1'); // turn water on
+    /*
+     * Start some clocking information
+     */
+    time_t elapsed = 0, start =time(NULL);
+    int tries = 0;
+    
+    while (interact_with_port(water_port_id, 'W', '1') < 0 && tries < PORTATTEMPTS) // turn water on
+      tries++; 
 
-    while(current < target_weight || elapsed_time >= WATERTIMEOUT ){
+    int initial = get_balance(balance_PortID);
+    
+    while(current < target_weight && elapsed < WATERTIMEOUT ){
       //wait for watering to be complete
       current = get_balance(balance_PortID);
-      clock_t diff = clock() - start;
-      elapsed_time = (diff * 1000 / CLOCKS_PER_SEC) / 1000; 
-      
+      elapsed = (time(NULL) - start);
+
+      // if after 10seconds no water appears then something has gone wrong
+      if (current == initial && elapsed > WATERCHANGETIMEOUT)
+	break;
     }
-    if (unlikely(interact_with_port(water_port_id, 'W', '0') < 0)) fprintf(stderr, "Error turning off water\n"); // turn water off
+    
+    tries = 0; 
+    while (unlikely(interact_with_port(water_port_id, 'W', '0') <  0) && tries < PORTATTEMPTS)
+      fprintf(stderr, "Error turning off water\n"); // turn water off
   }
+  //wait here as it would increase accuracy of the watering update if we let water settle
+  sleep(5);
   return get_balance(balance_PortID);
 }
 
 
-int interact_with_port(char* port_id, char BW, char off_on){
+int interact_with_port(char* port_id, char BWLT, char off_on){
 
+  /*
+   * Just to clarify: BW, B will refer to balance whilst W refers to watering, and L the lifter 
+   */
   speed_t baud = B9600; // baud rate
-  int fd = open(port_id, (BW == 'B') ? O_RDWR : O_WRONLY); //Open the port with the correct RW settings
+  int fd = open(port_id, (BWLT == 'B' || BWLT == 'L' || BWLT == 'T') ? O_RDWR : O_WRONLY); //Open the port with the correct RW settings
 
   struct termios settings; // structure for the settings that will be used for the port 
   tcgetattr(fd, &settings);
@@ -147,18 +173,28 @@ int interact_with_port(char* port_id, char BW, char off_on){
   timeout.tv_usec = PORTTIMEOUT;
   
   int w = 0;
-  if(BW == 'W'){
+  if(BWLT == 'W'){
     w = (int)  write(fd, &off_on, 1); 
-  }else{
+  }
+  else if (BWLT == 'L'){
+    w = (int) write(fd, (off_on) ? "d": "l" , 1); // if off == True then drop else lower 
+  }
+  else if (BWLT == 'T'){
+    w = (int) write(fd, "t", 1); // send tare signal 
+  }
+  else{
     w = (int) write(fd, "w", 1); // writes to the port a w or a 1/0 depending on function 
   }
   
   //If there's an error in writing to the scales then tell us!
-  if(unlikely(w < 0))
+  if(unlikely(w < 0) && BWLT != 'L'){
     fprintf(stderr, "Error writting to device: %s\n", port_id);
+    return -1; 
+  }
 
   //If we flip switch to water then return as it's worked
-  if(BW == 'W') return w;
+  if(BWLT == 'W') return w;
+  else if (BWLT == 'L') return w; 
 
   
   // Wait for input to become ready or until the time out; the first parameter is
@@ -173,7 +209,7 @@ int interact_with_port(char* port_id, char BW, char off_on){
 
     buffer[n] = 0;
     
-    if(deblank(buffer)) fprintf(stderr, "error getting data from scales") ; // remove all unhappy characters from the input
+    if(deblank(buffer)) fprintf(stderr, "Error getting data from scales") ; // remove all unhappy characters from the input
 
     close(fd); // close the connection
 
@@ -184,6 +220,9 @@ int interact_with_port(char* port_id, char BW, char off_on){
   return 0; // timeout or error
 }
 
+int activate_master_solenoid(char* port_id, char off_on){
+  return  interact_with_port(port_id, 'W', off_on);
+}
 
 int deblank(char* input){
   
@@ -207,4 +246,14 @@ int deblank(char* input){
   return isNumerical; 
 }
 
+int lift(char* lifter_address, char lift_drop){
 
+  interact_with_port(lifter_address, 'L', (lift_drop == 'l') ? 0 : 1); 
+  
+  return 0; 
+}
+
+int tare_balance(char* balance_address){
+  interact_with_port(balance_address, 'T', 0);
+  return 0; 
+}

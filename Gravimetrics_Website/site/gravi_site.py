@@ -1,7 +1,7 @@
 import web
 from table_builder import getTable, plantsForm
 from login_builder import createLoginForm, loginForm
-from data_plotter import generateFakeGraph, generateBalanceHistory
+from data_plotter import generateFakeGraph, generateBalanceHistory, generateWaterHistory
 from database import Connection
 
 
@@ -64,7 +64,9 @@ class Data:
         Uses a given get variable to generate the data required
         """
         plantId = web.input()['plantId']
-        return self.render.data(generateBalanceHistory(connection, plantId))
+        #return self.render.data(generateBalanceHistory(connection, plantId))
+        return self.render.data(generateWaterHistory(connection, plantId))
+
 
 
 class Login:
@@ -82,10 +84,16 @@ class Login:
         self.render = web.template.render('templates/')
 
     def GET(self):
+        """ 
+        Returns the login window (form)
+        """
         f = loginForm()
         return self.render.login(f)
 
     def POST(self):
+        """ 
+        Called when the user enters login data
+        """
         f = loginForm()
         if f.validates():
             session.loggedin = True
@@ -101,7 +109,7 @@ class Login:
 
 class Logout:
     """
-    Not really a page, just kills the session and redirects
+    Not really a page, just kills the session and redirects back to login
     """
 
     def GET(self):

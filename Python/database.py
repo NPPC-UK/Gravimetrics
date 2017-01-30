@@ -2,6 +2,13 @@
 This file contains all of the database interaction for the gravimetrics system
 it has facilities to pull data about experiments and plants, and can also
 perform some data updates via insert commands.
+
+These functions use return codes, 0,1,2
+
+0: Normal operation as expected
+1: Slight hiccup, was able to recover
+2: Major issue that program will cause a program to halt
+
 """
 
 import sys
@@ -35,11 +42,12 @@ class Connection(object):
                 pymysql.err.IntegrityError,
                 pymysql.err.MySQLError) as exception:
             sys.stderr.write(exception)
+            return 2
 
         finally:
             if self.connection is None:
                 sys.stderr.write("Problem connecting to database\n")
-                sys.exit()
+        return 0
 
     def get_plants(self, pi_num):
         """Returns a list of current plants under control of pi_num"""
@@ -55,7 +63,7 @@ class Connection(object):
                 left join watering_valves using(balance_id)\
                 where pi_assigned = {0} and end_date IS NULL or end_date > curdate()'.format(pi_num)
 
-                cursor.execute(sql, pi_num)
+                cursor.execute(sql)
                 result = cursor.fetchall()
 
                 for row in result:
@@ -69,6 +77,7 @@ class Connection(object):
                 pymysql.err.IntegrityError,
                 pymysql.err.MySQLError) as exception:
             sys.stderr.write(exception)
+            return 2
 
         finally:
             pass
@@ -82,39 +91,43 @@ class Connection(object):
                 # Update weight readings
                 sql = "INSERT INTO test.balance_data(balance_id, logdate, weight, experiment_id) \
                 VALUES ({0}, NOW(), {1}, '{2}')".format(plant.get_balance(),
-                                                        plant.get_end_weight(),
+                                                        plant.get_start_weight(),
                                                         plant.get_experiment_id())
 
+                print("The insert statement used is: {0}".format(sql))
                 # Execute our statement
                 if is_statement_safe(sql):
                     cursor.execute(sql)
                     self.connection.commit()
                 else:
                     print("DANGEROUS STATEMENT")
-                    sys.exit()
+                    return 1
 
         # There's quite a few things to go wrong here
         # so I think a broad exception catcher is best
         except (pymysql.err.DatabaseError,
                 pymysql.err.IntegrityError,
-                pymysql.err.MySQLError) as exception:
-            sys.stderr.write(exception)
+                pymysql.err.MySQLError):
+            sys.stderr.write(
+                "Most likely an IntegrityError error due to duplicate entry")
 
         finally:
-            print("Update has went smoothly")
+            pass
+
+        return 0
 
     def perform_watering_update(self, plant):
         """Takes a plant and uploads their watering\
         data to the database"""
         try:
             with self.connection.cursor() as cursor:
-                sql = "INSERT INTO test.watering_data(balance_id, logdate, start_weight, \
-                end_weight, status, experiment_id)\
+                sql = "INSERT INTO test.watering_data\
+                (balance_id, logdate, start_weight, end_weight, status, experiment_id)\
                 VALUES({0}, NOW(), {1}, {2}, {3}, '{4}')".format(plant.get_balance(),
                                                                  plant.get_start_weight(),
                                                                  plant.get_end_weight(),
-                                                                 plant.get_status,
-                                                                 plant.get_experiment_id)
+                                                                 plant.get_status(),
+                                                                 plant.get_experiment_id())
 
                 # Execute our statement
                 if is_statement_safe(sql):
@@ -125,8 +138,10 @@ class Connection(object):
                     sys.exit()
         except (pymysql.err.DatabaseError,
                 pymysql.err.IntegrityError,
-                pymysql.err.MySQLError) as exception:
-            sys.stderr.write(exception)
+                pymysql.err.MySQLError):
+            sys.stderr.write(
+                "Most likely an IntegrityError error due to duplicate entry")
+            return 2
 
     def __del__(self):
         """This is the tidy up function for the class
@@ -135,6 +150,7 @@ class Connection(object):
         if self.connection is not None:
             self.connection.close()
             print("Connection closed")
+            return 0
 
 
 def is_statement_safe(sql_statement):

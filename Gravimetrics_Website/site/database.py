@@ -43,6 +43,36 @@ class Connection(object):
                 sys.stderr.write("Problem connecting to database\n")
         return 0
 
+    def get_watering_history(self, balance_id, num_days=7):
+        """
+        This will get the most recent readings for a particular balance
+        using num_days to denote how far back to check readings 
+        """
+        try:
+            with self.connection.cursor() as cursor:
+
+                sql = "select * from watering_data where balance_id = {0} and logdate >= CURDATE()-{1}".format(
+                    balance_id, num_days)
+
+                cursor.execute(sql)
+                result = cursor.fetchall()
+                plant = plant_data()
+                for row in result:
+                    if str(row['start_weight']).isdigit() and str(row['end_weight']).isdigit():
+                        plant.add_entry(row['start_weight'], row[
+                                        'logdate'], end_weight=row['end_weight'])
+                    else:
+                        continue
+
+        except (pymysql.err.DatabaseError,
+                pymysql.err.IntegrityError,
+                pymysql.err.MySQLError) as exception:
+            sys.stderr.write(exception)
+            return 2
+        finally:
+            pass
+        return plant
+
     def get_balance_history(self, balance_id, num_days):
         """
         This will get the most recent readings for a particular balance

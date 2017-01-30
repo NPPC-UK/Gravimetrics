@@ -4,6 +4,7 @@
 class Plants(object):
 
     # pylint: disable-msg=too-many-instance-attributes
+    # pylint: disable-msg=too-many-arguments
     """Class to act as a container for plant data"""
 
     def __init__(self, plant_id, balance, address,
@@ -15,14 +16,25 @@ class Plants(object):
         self.solenoid = solenoid
         self.target_weight = target_weight
         self.experiment_id = experiment_id
-        self.start_weight = None
-        self.end_weight = None
-        self.status = None
+        self.start_weight = 'NULL'
+        self.end_weight = 'NULL'
+        self.status = 0  # default to 0
 
     def __str__(self):
-        return "| Plant: " + self.plant_id + " Balance: " + \
-            str(self.balance) + "| Experiment ID: " + self.experiment_id +\
-            "| Target Weight: " + str(self.target_weight) + " |"
+        content = "| Plant: {0} | Start Weight: {1} | End Weight: {2} | Status: {3} |\n".format(
+            self.plant_id, self.start_weight, self.end_weight, self.status)
+
+        top_bottom = ''
+        for _ in content:
+            top_bottom += '_'
+        top_bottom += '\n'
+
+        top_bottom = ''
+        for _ in content:
+            top_bottom += '_'
+        top_bottom += '\n'
+
+        return top_bottom + content + top_bottom
 
     def get_balance(self):
         """Gets the balance_id of this plant"""
@@ -38,7 +50,10 @@ class Plants(object):
 
     def set_start_weight(self, start_weight):
         """Sets the weight before watering"""
-        self.start_weight = start_weight
+        try:
+            self.start_weight = int(start_weight)
+        except ValueError:
+            self.start_weight = 'NULL'
 
     def get_start_weight(self):
         """Gets the start weight of a plant"""
@@ -46,7 +61,10 @@ class Plants(object):
 
     def set_end_weight(self, end_weight):
         """Sets the end weight of a plant after watering"""
-        self.end_weight = end_weight
+        try:
+            self.end_weight = int(end_weight)
+        except ValueError:
+            self.start_weight = 'NULL'
 
     def get_end_weight(self):
         """Gets the end weight of a plant after watering"""
@@ -54,10 +72,14 @@ class Plants(object):
 
     def get_target_weight(self):
         """Gets the target weight of a plant"""
-        return self.target_weight
+        return self.target_weight - 5  # may need  to remove this at some point
 
     def get_status(self):
         """Gets the status of watering"""
+    
+        if self.end_weight < (self.target_weight - 20) or\
+                self.end_weight > (self.target_weight + 20):
+            self.set_status(1)
         return self.status
 
     def set_status(self, status):
