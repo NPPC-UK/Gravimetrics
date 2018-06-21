@@ -1,0 +1,34 @@
+#+TITLE: Gravimetrics - An open source, scalable, plant phenotyping solution
+#+AUTHOR: Nathan Hughes, Colin Sauze, Jason Brook, John Doonan
+
+* Gravimetrics
+
+Here, a full blueprint and implementation compendium for a plant phenotyping system is provided.
+
+[[./Pictures/NPPC_Gravimetrics_System.png]]
+
+** What is a Gravimetrics phenotyping system?
+
+This system is designed to enable the study of mass/weight change over time for a set or sets of plants.
+
+By recording changes in weight at a minute-minute scale, plant behaviours can be accurately described, allowing for sophisticated and informative research to be undertaken.
+
+* What is provided?
+
+While there exists commercial solutions to gravimetric plant phenotyping, none are provided as open-source solutions.
+
+This project was designed and implemented at the National Plant Phenomics Centre in Aberystwyth, Wales, UK. Built from the ground up using widely available parts, allowing for adaption and scaling.
+
+Designs for physical hardware components used, software for hardware interaction, databases and web interfaces are all provided.
+
+* Components
+
+** Hardware Interaction
+
+** System Design Documentation
+
+** Raspberry Pi Setup
+
+** Database Configuration
+
+** Web Interface
