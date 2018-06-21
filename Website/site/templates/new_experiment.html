@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+    <head>
+	<link rel="stylesheet" type="text/css" href="/static/styles/general.css">
+    </head>
+    <body>
+	{% if resp %}
+	<h2><font color="red">{{ "{0}".format(resp) }}</font></h2>
+	{% endif %}
+	<h1>New Experiment</h1>
+	<div id="tabs">
+	    <ul class="tab">
+		<form style="float: right;" action="/login" method="get">
+		    <input type="submit" value="Logout" name="Logout" id="frmLogout" />
+		</form>
+		<form style="float: right;" action="/" method="get">
+		    <input type="submit" value="Index" name="home" id="frmHome" />
+		</form>
+	    </ul>
+	</div>
+
+	<table>
+	    <tr>
+		<td>
+		    <form name="upload" method="post" enctype="multipart/form-data" action="">
+			<input type=file name=file>
+			<input type=submit value=Upload>
+		    </form>
+		</td>
+	    </tr>
+	</table>
+
+
+	<script>
+
+	 function openTab(evt, option) {
+	     var i, tabcontent, tablinks;
+	     tabcontent = document.getElementsByClassName("tabcontent");
+	     for (i = 0; i < tabcontent.length; i++) {
+		 tabcontent[i].style.display = "none";
+	     }
+	     tablinks = document.getElementsByClassName("tablinks");
+	     for (i = 0; i < tablinks.length; i++) {
+		 tablinks[i].className = tablinks[i].className.replace(" active", "");
+	     }
+	     document.getElementById(benchName).style.display = "block";
+	     evt.currentTarget.className += " active";
+	 }
+	</script>
+    </body>
+</html>

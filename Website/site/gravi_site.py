@@ -1,140 +1,123 @@
-import web
-from table_builder import getTable, plantsForm
-from login_builder import createLoginForm, loginForm
-from data_plotter import generateFakeGraph, generateBalanceHistory, generateWaterHistory
-from database import Connection
+#!/usr/bin/python3
+
+from flask import Flask, render_template, request, redirect, url_for, session, flash, make_response
+from functools import wraps
+import pandas as pd
+from login_manager import login_user
+from data_manager import get_experiments, get_experiment_plants, get_all_water_data, get_all_balance_data, end_experiment, create_new_experiment, update_target_weights
+app = Flask(__name__)
+
+ALLOWED_EXTENSIONS = set(['csv'])
 
 
-class Index:
-    """
-    This is the index of the site
-    running this executes everything from it
-    currently the default screen is the viewing of plants
-    and editing of their target weights
-    """
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-    def __init__(self):
-        """
-        Constructor for the file
-        nothing special here
-        """
-        self.render = web.template.render('templates/')
 
-    def GET(self, name=None):
-        """
-        This function processes the GET requests from the site
-        """
-        if name:
-            print(name)
+def get_uploaded_file_as_df():
+    # Max said it was okay!
+    # We Trust people!
+    df = pd.DataFrame()
+    # check if the post request has the file part
+    if 'file' not in request.files:
+        flash('No file part')
+        resp = False
+    file = request.files['file']
+    # if user does not select file, browser also
+    # submit an empty part without filename
+    if file.filename == '':
+        flash('No selected file')
+        resp = False
+    if file and allowed_file(file.filename):
+        print(file.filename)
+        resp = True
+        df = pd.read_csv(request.files.get('file'))
+    else:
+        resp = 'Bad upload file'
+    return (resp, df)
 
-        data = web.input()
-        print(data)
 
-        if session.get('loggedin', None):
-            f = plantsForm()
-            return self.render.index(f, getTable)
+def checkuser(func):
+    """Checks whether user is logged in or passes to login page."""
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if 'username' not in session:
+            return redirect(url_for('login'))
+        return func(*args, **kwargs)
+    return wrapper
+
+
+@app.route("/", defaults={'path': ''}, methods=['GET', 'POST'])
+@app.route('/<path:path>', methods=['GET', 'POST'])
+@checkuser
+def index(path):
+    exps = get_experiments()
+    return render_template('index.html', experiments=exps, path=path)
+
+
+@app.route("/new_experiment",  methods=['GET', 'POST'])
+@checkuser
+def new_experiment():
+    resp = None
+    if request.method == 'POST':
+        resp, df = get_uploaded_file_as_df()
+        if resp:
+            resp = create_new_experiment(df, owner=session['username'][:3])
+    return render_template('new_experiment.html',
+                           resp=resp)
+
+
+@app.route("/data")
+@checkuser
+def data():
+    exp = request.args.get("experiment")
+    data_type = request.args.get("type")
+    if 'end' in data_type.lower():
+        end_experiment(exp)
+    df = get_all_water_data(
+        exp) if 'water' in data_type.lower() else get_all_balance_data(exp)
+    resp = make_response(df.to_csv())
+    resp.headers["Content-Disposition"] = "attachment; filename=export.csv"
+    resp.headers["Content-Type"] = "text/csv"
+    return resp
+
+
+@app.route("/experiment", methods=['GET', 'POST'])
+@checkuser
+def view_experiment():
+    resp = None
+    exp = request.args.get("experiment")
+    plants_df = get_experiment_plants(exp)
+    if request.method == 'POST':
+        resp, df = get_uploaded_file_as_df()
+        if resp:
+            resp = update_target_weights(df)
+    return render_template('experiment.html',
+                           experiment=exp,
+                           error=resp,
+                           plants=plants_df)
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    error = None
+    if request.method == 'GET':
+        # When this page is visited we want to log out the user
+        if 'username' in session:
+            session.pop('username', None)
+    if request.method == 'POST':
+        session['username'] = request.form['username']
+
+        pwd = request.form['password']
+        if login_user(app, session['username'], pwd):
+            return redirect(url_for('index'))
         else:
-            web.seeother('login')
-
-    def POST(self):
-        """
-        This function handles any post requests from the site
-        """
-        f = plantsForm()
-        if f.validates():
-            return self.render.index(f, getTable)
-        else:
-            # do whatever we want after a unsuccessful post
-            return 'Post hasn\'t worked!'
+            error = 'Invalid Credentials. Please try again.'
+    return render_template('login.html', error=error)
 
 
-class Data:
-    """
-    This generates and prints out the data for a particular plant
-    """
-
-    def __init__(self):
-        """
-        Default constructor for this class, nothing of note
-        """
-        self.render = web.template.render('templates/')
-
-    def GET(self):
-        """
-        Uses a given get variable to generate the data required
-        """
-        plantId = web.input()['plantId']
-        #return self.render.data(generateBalanceHistory(connection, plantId))
-        return self.render.data(generateWaterHistory(connection, plantId))
-
-
-
-class Login:
-    """
-    This is the login form
-    that takes all of the database information
-    rather than have specific users log into the system
-    """
-
-    def __init__(self):
-        """
-        Constructor for the file
-        nothing special here
-        """
-        self.render = web.template.render('templates/')
-
-    def GET(self):
-        """ 
-        Returns the login window (form)
-        """
-        f = loginForm()
-        return self.render.login(f)
-
-    def POST(self):
-        """ 
-        Called when the user enters login data
-        """
-        f = loginForm()
-        if f.validates():
-            session.loggedin = True
-            data = web.input()
-            if connection.create_connection(
-                    data['Host'], data['User'], data['Password'], data['Database']) == 0:
-                return web.seeother('/')
-            else:
-                return self.render.login(f)
-        else:
-            return self.render.login(f)
-
-
-class Logout:
-    """
-    Not really a page, just kills the session and redirects back to login
-    """
-
-    def GET(self):
-        session.kill()
-        web.seeother('/login')
-
-
-if __name__ == '__main__':
-    """
-    All going well and everything that is required being in place
-    this should fire off and the website should load
-    """
-
-    # This is some webpy stuff that shouldn't really need changed
-    # unless we start some MVC stuff, but please don't make me.
-    urls = ('/', 'Index',
-            '/index/?', 'Index',
-            '/data/?', 'Data',
-            '/login/?', 'Login',
-            '/logout/?', 'Logout')
-
-    app = web.application(urls, globals())
-    session = web.session.Session(app, web.session.DiskStore(
-        'sessions'))
-
-    connection = Connection()
-
-    app.run()
+if __name__ == "__main__":
+    app.secret_key = '8080'
+    app.config['SESSION_TYPE'] = 'filesystem'
+    app.run(host='0.0.0.0', port=9666, debug=False)

@@ -1,3 +1,12 @@
+h1 {
+    color: #111; font-family: 'Helvetica Neue', sans-serif;
+    font-size: 50px;
+    font-weight: bold;
+    letter-spacing: -1px;
+    line-height: 1;
+    text-align: center;
+}
+
 input[type=submit] {
   font-family: Arial;
   color: #ffffff;
@@ -62,8 +71,8 @@ table {
     font-family: arial, sans-serif;
     border-collapse: collapse;
     width: 100%;
-
 }
+
 
 td, th {
     border: 1px solid #dddddd;

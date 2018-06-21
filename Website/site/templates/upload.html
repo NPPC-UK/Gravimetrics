@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+    <head>
+      <link rel="stylesheet" type="text/css" href="/static/css/general.css">
+    </head>
+    <body>
+      <h1>New Experiment</h1>
+	<div id="tabs">
+	  <ul class="tab">
+	    <li><a href="javascript:void(0)" class="tablinks">Upload New Experiment</a></li>
+	    <form style="float: right;"action="/logout" method="get">
+	      <input type="submit" value="Logout" name="Logout" id="frmLogout" />
+	    </form>
+	    <form style="float: right;"action="/index" method="post">
+	      <input type="submit" value="Home" name="Home" id="frmHome" />
+	    </form>
+	  </ul>
+	</div>
+      <table>
+	<tr>
+	  <td>
+	    <form name="upload" method="post" enctype="multipart/form-data" action="">
+	      $if not form.valid:<p class="error">Try again</p>
+	      $if status:<p>It worked!</p>
+	      $:form.render()
+	  </td>
+	</tr>
+      </table>
+	<script>
+	 function openTab(evt, option) {
+	     var i, tabcontent, tablinks;
+	     tabcontent = document.getElementsByClassName("tabcontent");
+	     for (i = 0; i < tabcontent.length; i++) {
+		 tabcontent[i].style.display = "none";
+	     }
+	     tablinks = document.getElementsByClassName("tablinks");
+	     for (i = 0; i < tablinks.length; i++) {
+		 tablinks[i].className = tablinks[i].className.replace(" active", "");
+	     }
+	     document.getElementById(benchName).style.display = "block";
+	     evt.currentTarget.className += " active";
+	 }
+	</script>
+    </body>
+</html>

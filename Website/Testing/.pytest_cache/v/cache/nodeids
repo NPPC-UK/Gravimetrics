@@ -1,0 +1,9 @@
+[
+  "test_database.py::test_create_connection",
+  "test_database.py::test_login",
+  "test_database.py::test_create_new_experiment",
+  "test_database.py::test_update_target_weights",
+  "test_database.py::test_end_experiment",
+  "test_database.py::test_get_watering_history",
+  "test_database.py::test_get_balance_history"
+]

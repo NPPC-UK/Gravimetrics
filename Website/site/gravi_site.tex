@@ -1,0 +1,143 @@
+% Created 2018-06-19 Tue 09:13
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{fixltx2e}
+\usepackage{graphicx}
+\usepackage{longtable}
+\usepackage{float}
+\usepackage{wrapfig}
+\usepackage{rotating}
+\usepackage[normalem]{ulem}
+\usepackage{amsmath}
+\usepackage{textcomp}
+\usepackage{marvosym}
+\usepackage{wasysym}
+\usepackage{amssymb}
+\usepackage{hyperref}
+\tolerance=1000
+\usepackage{minted}
+\author{Nathan Hughes}
+\date{\today}
+\title{gravi\_site}
+\hypersetup{
+  pdfkeywords={},
+  pdfsubject={},
+  pdfcreator={Emacs 25.2.2 (Org mode 8.2.10)}}
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\#!/usr/bin/python3
+
+from flask import Flask, render$_{\text{template}}$, request, redirect, url$_{\text{for}}$, session, flash, make$_{\text{response}}$
+from functools import wraps
+import pandas as pd
+from login$_{\text{manager}}$ import login$_{\text{user}}$
+from data$_{\text{manager}}$ import get$_{\text{experiments}}$, get$_{\text{experiment}}$$_{\text{plants}}$, get$_{\text{all}}$$_{\text{water}}$$_{\text{data}}$, get$_{\text{all}}$$_{\text{balance}}$$_{\text{data}}$, end$_{\text{experiment}}$, create$_{\text{new}}$$_{\text{experiment}}$
+app = Flask(\uline{\uline{name}})
+
+ALLOWED$_{\text{EXTENSIONS}}$ = set(['csv'])
+
+
+def allowed$_{\text{file}}$(filename):
+    return '.' in filename and $\backslash$
+           filename.rsplit('.', 1)\footnote{DEFINITION NOT FOUND.}.lower() in ALLOWED$_{\text{EXTENSIONS}}$
+
+
+def get$_{\text{uploaded}}$$_{\text{file}}$$_{\text{as}}$$_{\text{df}}$():
+df = pd.DataFrame()
+if 'file' not in request.files:
+    flash('No file part')
+    resp = 'No file uploaded'
+file = request.files['file']
+if file.filename == '':
+    flash('No selected file')
+    resp = 'No file uploaded'
+if file and allowed$_{\text{file}}$(file.filename):
+    print(file.filename)
+    resp = 'Success'
+    df = pd.read$_{\text{csv}}$(request.files.get('file'))
+else:
+    resp = 'Bad upload file'
+return (resp, df)
+
+
+def checkuser(func):
+    """Checks whether user is logged in or passes to login page."""
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if 'username' not in session:
+            return redirect(url$_{\text{for}}$('login'))
+        return func(*args, **kwargs)
+    return wrapper
+
+
+@app.route("/", defaults=\{'path': ''\}, methods=['GET', 'POST'])
+@app.route('/<path:path>', methods=['GET', 'POST'])
+@checkuser
+def index(path):
+    exps = get$_{\text{experiments}}$()
+    return render$_{\text{template}}$('index.html', experiments=exps)
+
+
+@app.route("/upload")
+@checkuser
+def upload$_{\text{experiment}}$():
+    df = pd.read$_{\text{csv}}$(request.files.get('uploaded$_{\text{file'}}$))
+    create$_{\text{new}}$$_{\text{experiment}}$(df)
+
+
+@app.route("/data")
+@checkuser
+def data():
+    exp = request.args.get("experiment")
+    data$_{\text{type}}$ = request.args.get("type")
+    if 'end' in data$_{\text{type}}$.lower():
+        end$_{\text{experiment}}$(exp)
+    df = get$_{\text{all}}$$_{\text{water}}$$_{\text{data}}$(
+        exp) if 'water' in data$_{\text{type}}$.lower() else get$_{\text{all}}$$_{\text{balance}}$$_{\text{data}}$(exp)
+    resp = make$_{\text{response}}$(df.to$_{\text{csv}}$())
+    resp.headers["Content-Disposition"] = "attachment; filename=export.csv"
+    resp.headers["Content-Type"] = "text/csv"
+    return resp
+
+
+@app.route("/experiment", methods=['GET', 'POST'])
+@checkuser
+def view$_{\text{experiment}}$():
+    resp = None
+    exp = request.args.get("experiment")
+    plants$_{\text{df}}$ = get$_{\text{experiment}}$$_{\text{plants}}$(exp)
+    if request.method == 'POST':
+        resp, df = get$_{\text{uploaded}}$$_{\text{file}}$$_{\text{as}}$$_{\text{df}}$()
+    return render$_{\text{template}}$('experiment.html',
+                           experiment=exp,
+                           error=resp,
+                           plants=plants$_{\text{df}}$)
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    error = None
+    if request.method == 'GET':
+    if 'username' in session:
+        session.pop('username', None)
+if request.method == 'POST':
+    session['username'] = request.form['username']
+
+    pwd = request.form['password']
+    if login$_{\text{user}}$(app, session['username'], pwd):
+        return redirect(url$_{\text{for}}$('index'))
+    else:
+        error = 'Invalid Credentials. Please try again.'
+return render$_{\text{template}}$('login.html', error=error)
+
+
+if \uline{\uline{name}} == "\uline{\uline{main}}":
+    app.secret$_{\text{key}}$ = '8080'
+    app.config['SESSION$_{\text{TYPE']}}$ = 'filesystem'
+    app.run(host='0.0.0.0', port=9666, debug=False)
+% Emacs 25.2.2 (Org mode 8.2.10)
+\end{document}

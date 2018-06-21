@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+    <head>
+	<link rel="stylesheet" type="text/css" href="/static/styles/general.css">
+    </head>
+    <body>
+	<h1>Experiment Data: {{ experiment }}</h1>
+	{% if error %}
+	<br>
+	<h2><font color="red">{{ error }}</font></h2>
+	{% endif %}
+	    <div id="tabs">
+		<ul class="tab">
+		    <form style="float: right;"action="/" method="post">
+			<input type="submit" value="Home" name="Home" id="frmHome" />
+		    </form>
+		</ul>
+	    </div>
+	    <table>
+
+		<th>Change Target Weights</th>
+		<th>Get Balance Data</th>
+		<th>Get Watering Data</th>
+		<th>End Experiment</th>
+
+		<tr>
+		    <td>
+			<form name="upload" method="post" enctype="multipart/form-data" action="">
+			    <input type=file name=file>
+			    <input type=submit value=Upload>
+			</form>
+		    </form>
+		</td>
+
+
+		<td>
+		    <div id="balance">
+			<form action="/data" method="get">
+			    <input type="submit" value="Balance" name="type" id="frmBalance" />
+			    <input type="hidden" name="experiment" value="{{ experiment }}"/>
+			</form>
+		    </div>
+		</td>
+
+
+		<td>
+		    <div id="water">
+			<form action="/data" method="get">
+			    <input type="submit" value="Water" name="type" id="frmWater" />
+			    <input type="hidden" name="experiment" value="{{ experiment }}"/>
+			</form>
+		    </div>
+		</td>
+
+
+		<td>
+		    <div id="end">
+			<form action="/data?exp=$experimentID&data=end" method="get" enctype="multipart/form-data" onsubmit="return confirm('Consider, you are about to end an experiment... are you sure?');">
+			    <input type="submit"  value="End Now" name="type" id="frmEndr"  />
+			    <input type="hidden" name="experiment" value="{{ experiment }}"/>
+			</form>
+		    </div>
+		</td>
+	    </tr>
+
+
+	</table>
+
+
+	<table>
+
+	    <tr>
+		<th>Plant ID</th>
+		<th>Target Weight </th>
+	    </tr>
+
+	    {% for key,row in plants.iterrows() %}
+	    <tr>
+		<td>{{ row[0] }}</td>
+		<td>{{ row[2] }}</td>
+	    </tr>
+	    {% endfor %}
+
+
+	</table>
+    </body>
+</html>

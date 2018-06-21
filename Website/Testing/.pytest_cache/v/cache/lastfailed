@@ -1,0 +1,9 @@
+{
+  "test_database.py::test_create_connection": true,
+  "test_database.py::test_create_new_experiment": true,
+  "test_database.py::test_end_experiment": true,
+  "test_database.py::test_get_balance_history": true,
+  "test_database.py::test_get_watering_history": true,
+  "test_database.py::test_login": true,
+  "test_database.py::test_update_target_weights": true
+}

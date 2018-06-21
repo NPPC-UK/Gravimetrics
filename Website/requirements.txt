@@ -1,0 +1,15 @@
+click==6.7
+Flask==1.0.2
+Flask-JSON==0.3.2
+Flask-MySQL==1.4.0
+itsdangerous==0.24
+Jinja2==2.10
+MarkupSafe==1.0
+numpy==1.14.3
+pandas==0.23.0
+pkg-resources==0.0.0
+PyMySQL==0.8.1
+python-dateutil==2.7.3
+pytz==2018.4
+six==1.11.0
+Werkzeug==0.14.1

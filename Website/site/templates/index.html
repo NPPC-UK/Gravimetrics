@@ -1,54 +1,49 @@
-$def with (form, getTable)
-$ table = getTable()
 <!DOCTYPE html>
 <html>
     <head>
-      <link rel="stylesheet" type="text/css" href="static/css/general.css">
+	<link rel="stylesheet" type="text/css" href="/static/styles/general.css">
     </head>
-    
-    <body onload="openTab(event, 'bench0')">
-	<h1>
-	    Plants Updater
-	</h1>
-
-	
+    <body>
+      {% if path %}
+      <h2><font color="red">{{ "That path doesn't exist: {0} ".format(path) }}</font></h2>
+      {% endif %}
+	<h1>Experiments</h1>
 	<div id="tabs">
 	    <ul class="tab">
+		<li><a href="javascript:void(0)" class="tablinks" onclick="openTab(event, '$tab')">Current Experiments</a></li>
 
-		 $for bench in range(len(table['benches'])):
-		 <li><a href="javascript:void(0)" class="tablinks" onclick="openTab(event, 'bench$bench')">Bench $bench</a></li>
-		
-		<form style="float: right;"action="/logout" method="get">	    
+		<form style="float: right;"action="/login" method="GET">
 		    <input type="submit" value="Logout" name="Logout" id="frmLogout" />
 		</form>
-	    </ul>
 
+		<form style="float: right;"action="/new_experiment" method="GET">
+		    <input type="submit" value="New Experiment" name="newExp" id="frmNewExp" />
+		</form>
+	    </ul>
 	</div>
-	
-	<form name="update" method="post">
-	    $if not form.valid: <p class="error">Double check your given input!:</p>
-	    $for idx, bench in enumerate(table['benches']):
-	    
-	    <div id="bench$idx" class="tabcontent">
-		<table>
-		    <tr>		    
-			$for header in table['headers']:
-			<th>$header</th>  
-		    </tr>
-		    $for plant in table['benches'][idx]:
-		    <tr>
-			<td><a href="/data?plantId=$plant['name']">$plant['name']</a></td>
-			<td>$plant['balance'] </td>
-			<td>$:plant['weight']()</td>
-		    </tr>
-		</table>
-	    </div>
-	    
-	   $:form.Update.render()
-	</form>
+	<div id="Current Experiments">
+	    <table>
+		<th>Experiment ID</th>
+		<th>Experiment Owner</th>
+		<th>Start Date</th>
+		<th>End Date</th>
+
+		{% for key,row in experiments.iterrows() %}
+		<tr>
+		    <td> <a href="/experiment?experiment={{ row[0] }}"> {{ row[0] }} </a> </td>
+		    <td>{{ row[3] }}</td>
+		    <td>{{ row[1] }}</td>
+		    <td>{{ row[2] }}</td>
+		</tr>
+		{% endfor %}
+	    </table>
+	</div>
+
+
 
 	<script>
-	 function openTab(evt, benchName) {
+
+	 function openTab(evt, option) {
 	     var i, tabcontent, tablinks;
 	     tabcontent = document.getElementsByClassName("tabcontent");
 	     for (i = 0; i < tabcontent.length; i++) {
@@ -62,6 +57,5 @@ $ table = getTable()
 	     evt.currentTarget.className += " active";
 	 }
 	</script>
-
     </body>
 </html>

@@ -1,19 +1,22 @@
-$def with (form)
-
-<!DOCTYPE html>
-
 <html>
     <head>
-	<link rel="stylesheet" type="text/css" href="static/css/general.css">
+	<title>Login page</title>
+	<link rel="stylesheet" type="text/css" href="/static/styles/general.css">
     </head>
-
     <body>
-	<form name="main" method="post">
-	    $if not form.valid:<p class="error">Try again</p>
-	    $:form.render()
-	</form>
+	<div class="container">
+	    <h1>Please login</h1>
+	    <br>
+	    <form action="" method="post">
+		<input type="email" placeholder="email" name="username" value="{{ request.form.username }}" required>
+		<br>
+		<input type="password" placeholder="Password" name="password" value="{{request.form.password }}" required>
+		<br>
+		<input class="btn btn-default" type="submit" value="Login">
+	    </form>
+	    {% if error %}
+	    <p class="error"><strong>Error:</strong> {{ error }}
+	    {% endif %}
+	</div>
     </body>
-</html> 
-
-
-
+</html>
