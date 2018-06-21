@@ -1,0 +1,22 @@
+skinparam linetype ortho
+skinparam monochrome true
+
+
+(*) -> "Plants loaded onto system"
+--> "Each Plant has an\nallocated target weight"
+
+partition "Gravimetrics Loop" {
+
+-> "Check Database for\n active Plants"
+-> "For each Plant"
+If "Check if Plant\n needs water" then
+-> [Yes] "Calculate how much\nwater is required"
+--> "Open water-flow"
+--> "Water until\ntarget weight"
+--> "Close water-flow"
+--> "Record balance"
+
+else
+-> [No] "Record balance"
+Endif
+}

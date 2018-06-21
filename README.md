@@ -1,8 +1,4 @@
-#+TITLE: Gravimetrics - An open source, scalable, plant phenotyping solution
-#+AUTHOR: Nathan Hughes, Colin Sauze, Jason Brook, John Doonan
-#+OPTIONS: toc:nil
-
-* What is a Gravimetrics phenotyping system?
+# What is a Gravimetrics phenotyping system?
 
 This system is designed to enable the study of mass/weight change over time for a set or sets of plants. Additionally, the automatic watering and drought of plants are handled by this system.
 
@@ -10,10 +6,9 @@ By recording changes in weight at a minute-minute scale, plant behaviours can be
 
 Here, a full blueprint and implementation compendium for a plant phenotyping system is provided.
 
-[[./Pictures/NPPC_Gravimetrics_System.png]]
+![img](./Pictures/NPPC_Gravimetrics_System.png)
 
-
-* What is provided?
+# What is provided?
 
 While there exists commercial solutions to gravimetric plant phenotyping, none are provided as open-source solutions.
 
@@ -21,29 +16,28 @@ This project was designed and implemented at the National Plant Phenomics Centre
 
 Designs for physical hardware components used, software for hardware interaction, databases and web interfaces are all provided.
 
-* System Flow Diagram
+# System Flow Diagram
 
 The basic day-to-day flow is as such:
 
-[[./Documents/Diagrams/Flow/flow.png]]
+![img](./Documents/Diagrams/Flow/flow.png)
 
 Additiona; interactions, such as updating weights or changing watering times/frequency is performed manually through the web interface.
 
-* Components
+# Components
 
 Key components provided are:
 
-** Hardware Interaction
+## Hardware Interaction
 
-A low-level unix C library named "Gravi_Utils" is used to interact with load-cells (balances) over a serial connection to a Raspberry Pi controller.
+A low-level unix C library named "Gravi<sub>Utils</sub>" is used to interact with load-cells (balances) over a serial connection to a Raspberry Pi controller.
 
 In addition to reading balance information for a series of load-cells, the utilities library controls and manages the watering of plants.
 
+## System Design Documentation
 
-** System Design Documentation
+## Raspberry Pi Setup
 
-** Raspberry Pi Setup
+## Database Configuration
 
-** Database Configuration
-
-** Web Interface
+## Web Interface
