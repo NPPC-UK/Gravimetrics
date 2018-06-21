@@ -22,11 +22,15 @@ The basic day-to-day flow is as such:
 
 ![img](./Documents/Diagrams/Flow/flow.png)
 
-Additiona; interactions, such as updating weights or changing watering times/frequency is performed manually through the web interface.
+Additional interactions, such as updating weights or changing watering times/frequency is performed manually through the web interface.
 
 # Components
 
 Key components provided are:
+
+## Master Controller
+
+To provide a clean and simple interface between hardware and software, a central python script is used to fetch information from the database and pass it to the low-level hardware interactions, it also interprets output and updates the database accordingly.
 
 ## Hardware Interaction
 
@@ -34,10 +38,16 @@ A low-level unix C library named "Gravi<sub>Utils</sub>" is used to interact wit
 
 In addition to reading balance information for a series of load-cells, the utilities library controls and manages the watering of plants.
 
+## Web Interface
+
+A Flask based web server allows for simple uploading of new plants and experiments onto the system - this is designed for non-technical users to interact with.
+
+Relying heavily on interpreting CSV files and converting them to database queries, the interaction is straight forward.
+
 ## System Design Documentation
 
-## Raspberry Pi Setup
+Everything from electrical wiring diagrams, Raspberry Pi GPIO connections to prototype designs are available in various files.
 
 ## Database Configuration
 
-## Web Interface
+A MySQL database has been used for this project, setup scripts and database schemas are provided that quickly construct and setup all tables and requirements.

@@ -7,10 +7,10 @@ skinparam monochrome true
 
 partition "Gravimetrics Loop" {
 
--> "Check Database for\n active Plants"
+-> "Check Database for active Plants"
 -> "For each Plant"
 If "Check if Plant\n needs water" then
--> [Yes] "Calculate how much\nwater is required"
+-> [Yes ] "Calculate how much\nwater is required"
 --> "Open water-flow"
 --> "Water until\ntarget weight"
 --> "Close water-flow"
@@ -18,5 +18,6 @@ If "Check if Plant\n needs water" then
 
 else
 -> [No] "Record balance"
+-> "Update Database"
 Endif
 }
