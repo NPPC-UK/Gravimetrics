@@ -1,4 +1,5 @@
 from conn_manager import create_connection
+from random import randint
 import pymysql
 import pandas as pd
 
@@ -11,28 +12,35 @@ def create_new_experiment(dataframe, owner='NPPC'):
         exp_sql = "INSERT INTO experiment(experiment_id, start_date, end_date, owner) VALUES( \"{0}\", \"{1}\", \"{2}\", \"{3}\"  )"
 
         experiment_name = dataframe.columns[0]
+
         start_date = dataframe.columns[1]
         end_date = dataframe.columns[2]
-        cursor.execute(
-            'INSERT INTO dates(start_date, end_date) VALUES (\"{0}\", \"{1}\")'.format(start_date, end_date))
-        cursor.execute(exp_sql.format(
-            experiment_name, start_date, end_date, owner))
+        try:
+            cursor.execute(exp_sql.format(
+                experiment_name, start_date, end_date, owner))
+        except pymysql.err.IntegrityError:
+            return 'Experiment Exists Already: {0}'.format(experiment_name)
 
         # add plants
         plants_sql = "INSERT INTO plants(plant_id, experiment_id, target_weight) VALUES(  \"{0}\", \"{1}\", \"{2}\" )"
         plants_to_balance_sql = 'INSERT INTO plants_to_balance(start_date, end_date, plant_id, balance_id) VALUES(  \"{0}\", \"{1}\", \"{2}\", \"{3}\" )'
 
+        bad_plants = []
         for index, row in dataframe.iterrows():
-            cursor.execute(plants_sql.format(row[0],
-                                             experiment_name,
-                                             row[1]))
-
-            cursor.execute(plants_to_balance_sql.format(start_date,
-                                                        end_date,
-                                                        row[0],
-                                                        row[2]))
+            try:
+                cursor.execute(plants_sql.format(row[0],
+                                                 experiment_name,
+                                                 row[1]))
+                cursor.execute(plants_to_balance_sql.format(start_date,
+                                                            end_date,
+                                                            row[0],
+                                                            row[2]))
+            except pymysql.err.IntegrityError:
+                bad_plants.append(row[0])
+        if len(bad_plants) is not 0:
+            return "These plants already exist in the database: {0}".format(bad_plants)
         conn.commit()
-        return 0
+        return 'Successfully Uploaded'
 
 
 def update_target_weights(dataframe):
@@ -41,36 +49,41 @@ def update_target_weights(dataframe):
     with conn.cursor() as cursor:
         try:
             update_statement = "update plants set plants.target_weight = {0} where plants.plant_id='{1}' "
+            bad_plants = []
             for index, row in dataframe.iterrows():
+                cursor.execute(
+                    "select count(*) from plants where plants.plant_id='{0}'".format(row[0]))
+                r = cursor.fetchone()
+                if r['count(*)'] is 0:
+                    bad_plants.append(row[0])
+                    continue
                 cursor.execute(update_statement.format(row[1], row[0]))
+            if len(bad_plants) is 0:
                 conn.commit()
+            else:
+                return "These plants do not exist in the database:{0}".format(bad_plants)
         except Exception as e:
             return e
     return 'Successfully updated'
 
 
 def end_experiment(experiment_id):
-    try:
-        # create connection
-        conn = create_connection('gravi')
-        with conn.cursor() as cursor:
-
-            end_sql = "update experiment set experiment.end_date = NOW() where \
+    # create connection
+    conn = create_connection('gravi')
+    with conn.cursor() as cursor:
+        end_sql = "update experiment set experiment.end_date = NOW() where \
                 experiment.experiment_id = '{0}'".format(experiment_id)
-            cursor.execute(end_sql)
-            update_plants_to_balance_sql = "update plants_to_balance left join plants using(plant_id) \
+        cursor.execute(end_sql)
+        update_plants_to_balance_sql = "update plants_to_balance left join plants using(plant_id) \
                 set plants_to_balance.end_date = NOW() \
                 where plants.experiment_id = '{0}' ".format(experiment_id)
-            cursor.execute(update_plants_to_balance_sql)
-            conn.commit()
-
-            return get_all_water_data(experiment_id)
-    except:
-        return 2
+        cursor.execute(update_plants_to_balance_sql)
+        conn.commit()
+        return get_all_water_data(experiment_id)
 
 
 def get_experiment_plants(experiment_id):
-        # create connection
+    # create connection
     conn = create_connection('gravi')
     with conn.cursor() as cursor:
         get_plants_sql = "select * from plants where experiment_id = \"{0}\""

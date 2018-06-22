@@ -6,10 +6,6 @@
 
 use test;
 
-  /*Create test date */
-INSERT INTO dates(start_date, end_date)
-  VALUES ("2017/05/05", "2018/05/05");
-
   /*Create a test experiment */
 INSERT INTO experiment(experiment_id, start_date, end_date, owner)
   VALUES ('E_001', "2017/05/05", "2018/05/05", 'Dr Test');

@@ -25,7 +25,7 @@ def get_uploaded_file_as_df():
         resp = False
     file = request.files['file']
     # if user does not select file, browser also
-    # submit an empty part without filename
+    # submit an empty part without filenameX
     if file.filename == '':
         flash('No selected file')
         resp = False

@@ -1,9 +1,10 @@
 import pytest
 import sys
 import pandas as pd
+import os
 sys.path.append('./site/')
 
-pwd = ''
+pwd = os.environ['PASSWORD']
 
 
 @pytest.fixture
@@ -33,6 +34,18 @@ def test_login():
 def test_create_new_experiment():
     from data_manager import create_new_experiment
     df = pd.read_csv('./Testing/Testing_W041_load.csv')
+    create_new_experiment(df)
+
+
+def test_create_new_experiment_same_dates():
+    from data_manager import create_new_experiment
+    df = pd.read_csv('./Testing/Testing_W041_load.csv')
+    df.columns = ['TEST_Same_Dates1', '2022-01-01', '2023-01-01']
+    df[df.columns[0]] = df[df.columns[0]]+'66'
+    create_new_experiment(df)
+
+    df.columns = ['TEST_Same_Dates2', '2022-01-01', '2023-01-01']
+    df[df.columns[0]] = df[df.columns[0]]+'99'
     create_new_experiment(df)
 
 

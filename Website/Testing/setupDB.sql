@@ -16,25 +16,16 @@ drop table if exists hosts;
 drop table if exists dates;
 
 /*
-Dates must be unique, so this table helps to manage them for experiments!
-*/
-CREATE TABLE dates(
-  start_date DATETIME NOT NULL UNIQUE,
-  end_date DATETIME NOT NULL UNIQUE,
-  PRIMARY KEY (start_date, end_date)
-)ENGINE=InnoDB DEFAULT CHARSET=latin1;
-
-/*
  This table holds data on a given experiment being hosted on gravimetrics
  Primary Key: id = the identification of the experiment
 */
 CREATE TABLE experiment(
   experiment_id VARCHAR(30) NOT NULL ,
-  start_date DATETIME NOT NULL UNIQUE,
-  end_date DATETIME NOT NULL UNIQUE,
+  start_date DATETIME NOT NULL ,
+  end_date DATETIME NOT NULL ,
   owner VARCHAR(30) NOT NULL,
-  FOREIGN KEY (start_date) REFERENCES dates(start_date),
-  FOREIGN KEY (end_date) REFERENCES dates(end_date),
+  UNIQUE KEY start_date (start_date),
+  UNIQUE KEY end_date (end_date),
   PRIMARY KEY (experiment_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
@@ -113,8 +104,6 @@ CREATE TABLE plants_to_balance(
   end_date DATETIME NOT NULL,
   plant_id VARCHAR(30) NOT NULL,
   balance_id INT(3) NOT NULL,
-  FOREIGN KEY (start_date) REFERENCES experiment(start_date),
-  FOREIGN KEY (end_date) REFERENCES experiment(end_date),
   FOREIGN KEY (plant_id) REFERENCES plants(plant_id),
   FOREIGN KEY (balance_id) REFERENCES balances(balance_id),
   PRIMARY KEY(start_date, end_date, plant_id, balance_id)
